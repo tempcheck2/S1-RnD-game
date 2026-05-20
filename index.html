@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&D센터 조직활성화</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #18181c; color: #e1e1e6; margin: 0; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; background: #202024; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        h1 { text-align: center; color: #4ec9b0; font-size: 26px; margin-bottom: 25px; border-bottom: 2px solid #2b2b32; padding-bottom: 15px; }
+        .hidden { display: none !important; }
+        .card { background: #2b2b32; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        h3 { margin-top: 0; color: #ff8700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        input[type="text"], select { padding: 12px 16px; background: #18181c; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 15px; width: 100%; max-width: 300px; margin-right: 10px; }
+        button { padding: 12px 24px; background: #007acc; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0062a3; }
+        .share-link { background: #121214; padding: 15px; border-radius: 6px; color: #4ec9b0; font-family: monospace; font-size: 14px; border: 1px dashed #4ec9b0; margin-top: 15px; word-break: break-all; }
+        .player-status { margin: 18px 0; background: #18181c; padding: 12px; border-radius: 6px; border-left: 4px solid #444; }
+        .player-status.me { border-left-color: #4ec9b0; }
+        .player-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+        .bar-container { background: #333; width: 100%; height: 16px; border-radius: 8px; overflow: hidden; position: relative; }
+        .bar { background: linear-gradient(90deg, #4ec9b0, #36ad94); height: 100%; width: 0%; transition: width 0.1s linear; }
+        .bar-text { position: absolute; width: 100%; text-align: center; top: 0; font-size: 11px; line-height: 16px; color: white; font-weight: bold; }
+        .text-display { background: #121214; padding: 25px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; border: 1px solid #2b2b32; height: 350px; overflow-y: auto; margin-bottom: 20px; }
+        .correct { color: #569cd6; font-weight: bold; background: rgba(86,156,214,0.15); }
+        .incorrect { color: #fff; background-color: #ce1f1f; }
+        textarea { width: 100%; height: 140px; background: #121214; color: #fff; border: 2px solid #444; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; padding: 15px; resize: none; box-sizing: border-box; }
+        .timer { font-size: 20px; color: #ff6b6b; font-weight: bold; background: #1e1e24; padding: 5px 15px; border-radius: 6px; border: 1px solid #ff6b6b; }
+        
+        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px; text-align: left; border-bottom: 1px solid #444; }
+        .leaderboard-table th { background: #18181c; color: #4ec9b0; }
+        .rank-1 { color: #ffd700; font-weight: bold; font-size: 18px; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 2026 R&D센터 스피드 타자왕</h1>
+
+    <div id="view-login" class="card">
+        <h3>👤 게임 참가자 정보 등록</h3>
+        <p style="color: #a8a8b2; font-size: 14px;">이름을 입력하고 입장해주세요.</p>
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
+            <input type="text" id="input-name" placeholder="이름 입력 (최대 12자)" maxlength="12">
+            <button id="btn-join">입장하기</button>
+        </div>
+    </div>
+
+    <div id="view-lobby" class="card hidden">
+        <h3>🔗 대기실 접속 주소</h3>
+        <p style="color: #a8a8b2; font-size: 14px; margin-bottom: 5px;">연구원들에게 아래 주소를 복사해서 전달하세요.</p>
+        <div class="share-link" id="text-link">로드 중...</div>
+        
+        <div id="host-panel" class="hidden" style="margin-top: 25px; padding: 20px; background: #1e1e24; border-radius: 6px; border: 1px solid #ff8700;">
+            <h4 style="margin: 0 0 15px 0; color: #ff8700;">🛠️ 방장 제어 옵션</h4>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <select id="select-lang">
+                    <option value="1">1번 : C 언어</option>
+                    <option value="2">2번 : C++</option>
+                    <option value="3">3번 : Java</option>
+                    <option value="4">4번 : Python</option>
+                </select>
+                <button id="btn-start" style="background: #4ec9b0; color: #18181c;">🔥 15분 배틀 시작!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 플레이 영역 -->
+    <div id="view-game" class="card hidden">
+        <!-- 게임 중 방장에게만 보이는 강제 종료 패널 -->
+        <div id="host-game-panel" class="hidden" style="margin-bottom: 15px; text-align: right; border-bottom: 1px solid #444; padding-bottom: 15px;">
+            <button id="btn-force-stop" style="background: #ce1f1f; color: white; padding: 8px 16px;">🛑 강제 종료 및 순위 집계</button>
+        </div>
+
+        <h3>
+            <span id="game-title" style="color: #4ec9b0;">🎮 코드를 똑같이 입력하세요!</span>
+            <div id="timer-display" class="timer">15:00</div>
+        </h3>
+        <div class="text-display" id="target-text"></div>
+        <textarea id="type-input" placeholder="대기하세요... 방장이 시작하면 활성화됩니다." disabled></textarea>
+    </div>
+
+    <div id="view-status" class="card hidden">
+        <h3>📊 실시간 레이스 현황</h3>
+        <div id="player-bars"></div>
+    </div>
+
+    <!-- 최종 순위표 영역 -->
+    <div id="view-leaderboard" class="card hidden" style="border: 2px solid #ffd700;">
+        <h3 style="color: #ffd700; text-align: center; font-size: 24px; display: block; border-bottom: 1px solid #444; padding-bottom: 15px;">
+            🏆 최종 순위 발표
+        </h3>
+        <table class="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>순위</th>
+                    <th>이름</th>
+                    <th>진행률</th>
+                    <th>타이핑 속도 (WPM)</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-content">
+                <!-- 자바스크립트로 채워짐 -->
+            </tbody>
+        </table>
+        <div style="text-align: center; margin-top: 25px;">
+            <button id="btn-restart" class="hidden" style="background: #ff8700; color: #000;">대기실로 돌아가기 (새 게임)</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const playerId = Math.random().toString(36).substring(2, 10);
+    const urlParams = new URLSearchParams(window.location.search);
+    let roomId = urlParams.get('room');
+    if (!roomId) roomId = Math.random().toString(36).substring(2, 8);
+
+    const ui = {
+        login: document.getElementById('view-login'),
+        lobby: document.getElementById('view-lobby'),
+        game: document.getElementById('view-game'),
+        status: document.getElementById('view-status'),
+        leaderboard: document.getElementById('view-leaderboard')
+    };
+    
+    let originalText = "";
+    let startTime = null;
+    let pollInterval = null;
+
+    async function sendAction(url, data = {}) {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, playerId, ...data })
+        });
+    }
+
+    function formatTime(ms) {
+        if (ms <= 0) return "00:00";
+        const totalSeconds = Math.floor(ms / 1000);
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    document.getElementById('btn-join').addEventListener('click', async () => {
+        const name = document.getElementById('input-name').value.trim();
+        if (!name) return alert('참가자 이름을 입력해주세요!');
+        
+        await sendAction('/api/join', { name });
+        
+        ui.login.classList.add('hidden');
+        ui.lobby.classList.remove('hidden');
+        ui.status.classList.remove('hidden');
+        
+        document.getElementById('text-link').innerText = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+        startPolling();
+    });
+
+    document.getElementById('select-lang').addEventListener('change', async (e) => {
+        await sendAction('/api/control', { action: 'change_lang', langId: parseInt(e.target.value) });
+    });
+
+    document.getElementById('btn-start').addEventListener('click', async () => {
+        await sendAction('/api/control', { action: 'start' });
+    });
+
+    // 방장 전용 강제 종료 이벤트
+    document.getElementById('btn-force-stop').addEventListener('click', async () => {
+        if(confirm("정말 게임을 강제 종료하고 현재 상태로 순위를 집계하시겠습니까?")) {
+            await sendAction('/api/control', { action: 'force_stop' });
+        }
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+        ui.leaderboard.classList.add('hidden');
+        ui.lobby.classList.remove('hidden');
+        ui.status.classList.remove('hidden');
+    });
+
+    function startPolling() {
+        if (pollInterval) clearInterval(pollInterval);
+        
+        pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/status?room=${roomId}`);
+                const roomState = await res.json();
+                if (roomState.error) return;
+
+                const isHost = roomState.host === playerId;
+                
+                // 대기실 방장 메뉴 노출
+                if (isHost && !roomState.gameStarted) {
+                    document.getElementById('host-panel').classList.remove('hidden');
+                    document.getElementById('btn-restart').classList.remove('hidden');
+                } else {
+                    document.getElementById('host-panel').classList.add('hidden');
+                    document.getElementById('select-lang').value = roomState.selectedLang;
+                }
+
+                // 게임 중 방장에게만 강제 종료 버튼 노출
+                if (isHost && roomState.gameStarted && !roomState.gameEnded) {
+                    document.getElementById('host-game-panel').classList.remove('hidden');
+                } else {
+                    document.getElementById('host-game-panel').classList.add('hidden');
+                }
+
+                originalText = roomState.text;
+
+                // 게임 시작 처리
+                const typeInput = document.getElementById('type-input');
+                if (roomState.gameStarted && !roomState.gameEnded) {
+                    ui.lobby.classList.add('hidden');
+                    ui.leaderboard.classList.add('hidden');
+                    ui.game.classList.remove('hidden');
+                    ui.status.classList.remove('hidden');
+
+                    document.getElementById('timer-display').innerText = formatTime(roomState.timeLeft);
+
+                    if (typeInput.disabled && !roomState.players[playerId].isFinished) {
+                        typeInput.value = "";
+                        typeInput.disabled = false;
+                        typeInput.placeholder = "타이핑을 시작하세요!";
+                        typeInput.focus();
+                        renderTargetText("");
+                        startTime = new Date();
+                    }
+                }
+
+                // 게임 종료 및 리더보드 표시
+                if (roomState.gameEnded) {
+                    ui.game.classList.add('hidden');
+                    ui.status.classList.add('hidden');
+                    ui.leaderboard.classList.remove('hidden');
+                    typeInput.disabled = true;
+
+                    const sortedPlayers = Object.values(roomState.players).sort((a, b) => a.rank - b.rank);
+                    let html = '';
+                    sortedPlayers.forEach(p => {
+                        let rankClass = p.rank === 1 ? 'rank-1' : (p.rank === 2 ? 'rank-2' : (p.rank === 3 ? 'rank-3' : ''));
+                        let medal = p.rank === 1 ? '🥇 ' : (p.rank === 2 ? '🥈 ' : (p.rank === 3 ? '🥉 ' : ''));
+                        html += `
+                            <tr>
+                                <td class="${rankClass}">${medal}${p.rank}위</td>
+                                <td>${p.name} ${p.name === roomState.players[playerId].name ? '(나)' : ''}</td>
+                                <td>${Math.floor(p.progress)}%</td>
+                                <td>${p.wpm} WPM</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('leaderboard-content').innerHTML = html;
+                } else {
+                    // 실시간 진행도 바 업데이트
+                    const playerBars = document.getElementById('player-bars');
+                    playerBars.innerHTML = "";
+                    const sortedLive = Object.entries(roomState.players).sort((a, b) => {
+                        if (a[1].isFinished && b[1].isFinished) return a[1].rank - b[1].rank;
+                        if (a[1].isFinished) return -1;
+                        if (b[1].isFinished) return 1;
+                        return b[1].progress - a[1].progress;
+                    });
+                    
+                    sortedLive.forEach(([id, player]) => {
+                        playerBars.innerHTML += `
+                            <div class="player-status ${id === playerId ? 'me' : ''}">
+                                <div class="player-info">
+                                    <span>${player.rank ? `🏁 ` : ''}${player.name}</span>
+                                    <span style="color: #4ec9b0; font-weight:bold;">${player.wpm} WPM</span>
+                                </div>
+                                <div class="bar-container">
+                                    <div class="bar" style="width: ${player.progress}%"></div>
+                                    <div class="bar-text">${Math.floor(player.progress)}%</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {}
+        }, 1000);
+    }
+
+    document.getElementById('type-input').addEventListener('input', async (e) => {
+        const currentInput = e.target.value;
+        renderTargetText(currentInput);
+
+        let correctChars = 0;
+        for (let i = 0; i < currentInput.length; i++) {
+            if (currentInput[i] === originalText[i]) correctChars++;
+            else break;
+        }
+
+        const progress = (correctChars / originalText.length) * 100;
+        const timeElapsed = (new Date() - startTime) / 1000 / 60;
+        const wpm = timeElapsed > 0 ? Math.floor((correctChars / 5) / timeElapsed) : 0;
+
+        await sendAction('/api/progress', { progress, wpm });
+    });
+
+    document.getElementById('type-input').addEventListener('paste', e => e.preventDefault());
+
+    function renderTargetText(input) {
+        let resultHtml = "";
+        for (let i = 0; i < originalText.length; i++) {
+            if (i < input.length) {
+                resultHtml += `<span class="${input[i] === originalText[i] ? 'correct' : 'incorrect'}">${originalText[i] === '\n' ? '↵\n' : originalText[i]}</span>`;
+            } else {
+                resultHtml += originalText[i];
+            }
+        }
+        document.getElementById('target-text').innerHTML = resultHtml;
+    }
+</script>
+</body>
+</html>
