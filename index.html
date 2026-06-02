@@ -42,10 +42,10 @@
     <h1>🚀 2026 R&D센터 스피드 타자왕</h1>
 
     <div id="view-login" class="card">
-        <h3>👤 게임 참가자 정보 등록</h3>
+        <h3>게임 참가자 정보 등록</h3>
         <p style="color: #a8a8b2; font-size: 14px;">이름을 입력하고 입장해주세요.</p>
         <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
-            <input type="text" id="input-name" placeholder="이름 입력 (최대 12자)" maxlength="12">
+            <input type="text" id="input-name" placeholder="이름 입력" maxlength="12">
             <button id="btn-join">입장하기</button>
         </div>
     </div>
@@ -59,25 +59,24 @@
             <h4 style="margin: 0 0 15px 0; color: #ff8700;">🛠️ 방장 제어 옵션</h4>
             <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                 <select id="select-lang">
-                    <option value="1">1번 : C 언어</option>
-                    <option value="2">2번 : C++</option>
-                    <option value="3">3번 : Java</option>
-                    <option value="4">4번 : Python</option>
+                    <option value="1">1번 : C 언어 </option>
+                    <option value="2">2번 : C++ </option>
+                    <option value="3">3번 : Java </option>
+                    <option value="4">4번 : Python </option>
+                    <option value="5">5번 : JavaScript </option>
                 </select>
                 <button id="btn-start" style="background: #4ec9b0; color: #18181c;">🔥 15분 배틀 시작!</button>
             </div>
         </div>
     </div>
 
-    <!-- 게임 플레이 영역 -->
     <div id="view-game" class="card hidden">
-        <!-- 게임 중 방장에게만 보이는 강제 종료 패널 -->
         <div id="host-game-panel" class="hidden" style="margin-bottom: 15px; text-align: right; border-bottom: 1px solid #444; padding-bottom: 15px;">
             <button id="btn-force-stop" style="background: #ce1f1f; color: white; padding: 8px 16px;">🛑 강제 종료 및 순위 집계</button>
         </div>
 
         <h3>
-            <span id="game-title" style="color: #4ec9b0;">🎮 코드를 똑같이 입력하세요!</span>
+            <span id="game-title" style="color: #4ec9b0;"> 코드를 똑같이 입력하세요!</span>
             <div id="timer-display" class="timer">15:00</div>
         </h3>
         <div class="text-display" id="target-text"></div>
@@ -89,7 +88,6 @@
         <div id="player-bars"></div>
     </div>
 
-    <!-- 최종 순위표 영역 -->
     <div id="view-leaderboard" class="card hidden" style="border: 2px solid #ffd700;">
         <h3 style="color: #ffd700; text-align: center; font-size: 24px; display: block; border-bottom: 1px solid #444; padding-bottom: 15px;">
             🏆 최종 순위 발표
@@ -100,12 +98,11 @@
                     <th>순위</th>
                     <th>이름</th>
                     <th>진행률</th>
-                    <th>타이핑 속도 (WPM)</th>
+                    <th>타이핑 속도 (타/분)</th>
                 </tr>
             </thead>
             <tbody id="leaderboard-content">
-                <!-- 자바스크립트로 채워짐 -->
-            </tbody>
+                </tbody>
         </table>
         <div style="text-align: center; margin-top: 25px;">
             <button id="btn-restart" class="hidden" style="background: #ff8700; color: #000;">대기실로 돌아가기 (새 게임)</button>
@@ -194,7 +191,6 @@
 
                 const isHost = roomState.host === playerId;
                 
-                // 대기실 방장 메뉴 노출
                 if (isHost && !roomState.gameStarted) {
                     document.getElementById('host-panel').classList.remove('hidden');
                     document.getElementById('btn-restart').classList.remove('hidden');
@@ -203,7 +199,6 @@
                     document.getElementById('select-lang').value = roomState.selectedLang;
                 }
 
-                // 게임 중 방장에게만 강제 종료 버튼 노출
                 if (isHost && roomState.gameStarted && !roomState.gameEnded) {
                     document.getElementById('host-game-panel').classList.remove('hidden');
                 } else {
@@ -212,7 +207,6 @@
 
                 originalText = roomState.text;
 
-                // 게임 시작 처리
                 const typeInput = document.getElementById('type-input');
                 if (roomState.gameStarted && !roomState.gameEnded) {
                     ui.lobby.classList.add('hidden');
@@ -232,7 +226,6 @@
                     }
                 }
 
-                // 게임 종료 및 리더보드 표시
                 if (roomState.gameEnded) {
                     ui.game.classList.add('hidden');
                     ui.status.classList.add('hidden');
@@ -249,13 +242,12 @@
                                 <td class="${rankClass}">${medal}${p.rank}위</td>
                                 <td>${p.name} ${p.name === roomState.players[playerId].name ? '(나)' : ''}</td>
                                 <td>${Math.floor(p.progress)}%</td>
-                                <td>${p.wpm} WPM</td>
+                                <td>${p.wpm} 타/분</td>
                             </tr>
                         `;
                     });
                     document.getElementById('leaderboard-content').innerHTML = html;
                 } else {
-                    // 실시간 진행도 바 업데이트
                     const playerBars = document.getElementById('player-bars');
                     playerBars.innerHTML = "";
                     const sortedLive = Object.entries(roomState.players).sort((a, b) => {
@@ -270,7 +262,7 @@
                             <div class="player-status ${id === playerId ? 'me' : ''}">
                                 <div class="player-info">
                                     <span>${player.rank ? `🏁 ` : ''}${player.name}</span>
-                                    <span style="color: #4ec9b0; font-weight:bold;">${player.wpm} WPM</span>
+                                    <span style="color: #4ec9b0; font-weight:bold;">${player.wpm} 타/분</span>
                                 </div>
                                 <div class="bar-container">
                                     <div class="bar" style="width: ${player.progress}%"></div>
@@ -296,9 +288,11 @@
 
         const progress = (correctChars / originalText.length) * 100;
         const timeElapsed = (new Date() - startTime) / 1000 / 60;
-        const wpm = timeElapsed > 0 ? Math.floor((correctChars / 5) / timeElapsed) : 0;
+        
+        // 5글자=1단어 계산(WPM)을 빼고, 실제 입력한 타수(문자 수)를 시간(분)으로 나눠 '분당 타수(CPM)'로 변경
+        const cpm = timeElapsed > 0 ? Math.floor(correctChars / timeElapsed) : 0;
 
-        await sendAction('/api/progress', { progress, wpm });
+        await sendAction('/api/progress', { progress, wpm: cpm });
     });
 
     document.getElementById('type-input').addEventListener('paste', e => e.preventDefault());
