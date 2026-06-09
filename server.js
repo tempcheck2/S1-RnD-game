@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 8080;
 const TIME_LIMIT_MS = 15 * 60 * 1000; // 15분
 
 const CODE_TEXTS = {
-    1: `// 1번 C 언어
+    1: `// 1번: C 언어 - 출입 통제 안티패스백(APB) 시스템
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -15,17 +15,16 @@ bool is_inside[MAX_USERS] = {false};
 
 void process_card_tag(int user_id, bool is_entry) {
     if (user_id <= 0 || user_id > MAX_USERS) return;
-    
     if (is_entry) {
         if (is_inside[user_id]) {
-            printf("[ALARM] APB Violation! User %d is already inside.\\n", user_id);
+            printf("[ALARM] APB Violation! User %d already inside.\\n", user_id);
             return;
         }
         is_inside[user_id] = true;
         printf("[INFO] Entry Granted. Door Opened for User %d.\\n", user_id);
     } else {
         if (!is_inside[user_id]) {
-            printf("[ALARM] APB Violation! User %d is not inside.\\n", user_id);
+            printf("[ALARM] APB Violation! User %d not inside.\\n", user_id);
             return;
         }
         is_inside[user_id] = false;
@@ -40,50 +39,32 @@ int main() {
     process_card_tag(10, false);
     return 0;
 }`,
-    2: `// 2번 C++
+    2: `// 2번: C++ - 이중 인증(2-Card Authentication) 도어락 제어기
 #include <iostream>
 #include <string>
 #include <chrono>
 
 class DualAuthDoor {
-private:
-    std::string first_card_id;
-    long long first_tag_time;
-    const int AUTH_TIMEOUT_MS = 5000;
-
-    long long current_time_ms() {
-        auto now = std::chrono::system_clock::now();
+    std::string first_card;
+    long long first_time = 0;
+    const int TIMEOUT = 5000;
+    long long now_ms() {
         return std::chrono::duration_cast<std::chrono::milliseconds>
-               (now.time_since_epoch()).count();
+               (std::chrono::system_clock::now().time_since_epoch()).count();
     }
-
 public:
-    DualAuthDoor() : first_card_id(""), first_tag_time(0) {}
-
     void tag_card(const std::string& card_id) {
-        long long now = current_time_ms();
-
-        if (first_card_id.empty()) {
-            first_card_id = card_id;
-            first_tag_time = now;
-            std::cout << "[INFO] First card tagged. Waiting for second card...\\n";
+        long long now = now_ms();
+        if (first_card.empty() || now - first_time > TIMEOUT) {
+            first_card = card_id;
+            first_time = now;
+            std::cout << "[INFO] 1st card tagged. Waiting for 2nd...\\n";
             return;
         }
-
-        if (now - first_tag_time > AUTH_TIMEOUT_MS) {
-            std::cout << "[TIMEOUT] Auth window expired. Resetting state.\\n";
-            first_card_id = card_id;
-            first_tag_time = now;
-            return;
-        }
-
-        if (first_card_id == card_id) {
-            std::cout << "[ERROR] Cannot use the same card twice!\\n";
-        } else {
-            std::cout << "[SUCCESS] Dual authentication complete. Door unlocked!\\n";
-            first_card_id = "";
-            first_tag_time = 0;
-        }
+        if (first_card == card_id) std::cout << "[ERROR] Same card used!\\n";
+        else std::cout << "[SUCCESS] Dual auth complete. Door unlocked!\\n";
+        first_card = "";
+        first_time = 0;
     }
 };
 
@@ -93,44 +74,31 @@ int main() {
     lab_door.tag_card("MGR_9901");
     return 0;
 }`,
-    3: `// 3번 Java
+    3: `// 3번: Java - 다중 구역 안티패스백 및 보안 인가 매니저
 import java.util.HashMap;
 import java.util.Map;
 
 public class AccessController {
-    private final Map<String, String> userLocations;
-    private final boolean isApbEnabled;
+    private final Map<String, String> userLoc = new HashMap<>();
+    private final boolean apbEnabled;
 
     public AccessController(boolean enforceApb) {
-        this.userLocations = new HashMap<>();
-        this.isApbEnabled = enforceApb;
+        this.apbEnabled = enforceApb;
         System.out.println("[INIT] Access Controller started. APB: " + enforceApb);
     }
 
     public synchronized void requestAccess(String empId, String targetZone) {
-        String currentLocation = userLocations.getOrDefault(empId, "OUTSIDE");
-
-        if (isApbEnabled && currentLocation.equals(targetZone)) {
-            System.out.println("[REJECT] " + empId + " APB Rule Triggered.");
-            triggerSiren(empId);
+        String currentLoc = userLoc.getOrDefault(empId, "OUTSIDE");
+        if (apbEnabled && currentLoc.equals(targetZone)) {
+            System.err.println("[ALERT] APB Triggered. Dispatching sec for " + empId);
             return;
         }
-
-        if (!checkClearance(empId, targetZone)) {
-            System.out.println("[DENIED] " + empId + " lacks clearance for " + targetZone);
+        if (!(empId.startsWith("SEC_") || targetZone.equals("LOBBY"))) {
+            System.out.println("[DENIED] " + empId + " lacks clearance.");
             return;
         }
-
-        userLocations.put(empId, targetZone);
+        userLoc.put(empId, targetZone);
         System.out.println("[GRANTED] Door opened. " + empId + " entered " + targetZone);
-    }
-
-    private boolean checkClearance(String empId, String zone) {
-        return empId.startsWith("SEC_") || zone.equals("LOBBY");
-    }
-
-    private void triggerSiren(String empId) {
-        System.err.println("[ALERT] Security team dispatched for ID: " + empId);
     }
 
     public static void main(String[] args) {
@@ -139,17 +107,16 @@ public class AccessController {
         ac.requestAccess("SEC_1004", "SERVER_ROOM"); // Trigger APB
     }
 }`,
-    4: `# 4번 Python
+    4: `# 4번: Python - 데코레이터를 활용한 2FA 출입 로깅 파이프라인
 import time
 from datetime import datetime
 
 def audit_logger(func):
     def wrapper(user_id, door_id, *args, **kwargs):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[{timestamp}] TAG EVENT: {user_id} at {door_id}")
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[{ts}] TAG EVENT: {user_id} at {door_id}")
         result = func(user_id, door_id, *args, **kwargs)
-        status = "OPENED" if result else "LOCKED"
-        print(f"[{timestamp}] DOOR STATUS: {status}")
+        print(f"[{ts}] DOOR STATUS: {'OPENED' if result else 'LOCKED'}")
         return result
     return wrapper
 
@@ -161,28 +128,21 @@ class SecurityZone:
 
     @audit_logger
     def swipe_card(self, user_id, door_id):
-        if not self.requires_2fa:
-            return True
-            
+        if not self.requires_2fa: return True
         if user_id not in self.auth_cache:
             self.auth_cache.append(user_id)
-            print("[SYSTEM] 1/2 Authentication stored. Waiting...")
+            print("[SYSTEM] 1/2 Auth stored. Waiting for second tag...")
             return False
-            
         self.auth_cache.remove(user_id)
-        print("[SYSTEM] 2/2 Authentication successful.")
+        print("[SYSTEM] 2/2 Auth successful. Identity verified.")
         return True
 
 if __name__ == "__main__":
-    print("--- R&D Center Security Initialized ---")
-    main_gate = SecurityZone("MAIN_GATE", requires_2fa=False)
     lab_door = SecurityZone("RD_LAB_A", requires_2fa=True)
-    
-    main_gate.swipe_card("EMP_882", "G-01")
     lab_door.swipe_card("EMP_882", "L-01")
     lab_door.swipe_card("MGR_001", "L-01")
 `,
-    5: `// 5번 JavaScript
+    5: `// 5번: JavaScript - 비동기 인증 및 안티패스백 게이트웨이
 class DoorController {
     constructor(doorId, strictMode = true) {
         this.doorId = doorId;
@@ -190,44 +150,66 @@ class DoorController {
         this.occupants = new Set();
     }
 
-    async processTagEvent(cardId, direction) {
-        console.log(\`[TAG] Card: \${cardId} | Dir: \${direction}\`);
-        
+    async processTag(cardId, dir) {
+        console.log(\`[TAG] Card: \${cardId} | Dir: \${dir}\`);
         try {
-            await this.verifyCredentials(cardId);
-            this.checkAntiPassback(cardId, direction);
-            this.executeRelay(direction);
-        } catch (error) {
-            console.error(\`[ACCESS DENIED] \${error.message}\`);
+            await new Promise((res, rej) => setTimeout(() => 
+                cardId.includes("REVOKED") ? rej("Invalid Card") : res(), 200)
+            );
+            if (this.strictMode) {
+                const isInside = this.occupants.has(cardId);
+                if (dir === 'IN' && isInside) throw new Error("Already Inside");
+                if (dir === 'OUT' && !isInside) throw new Error("Not Inside");
+            }
+            dir === 'IN' ? this.occupants.add(cardId) : this.occupants.delete(cardId);
+            console.log(\`[DOOR \${this.doorId}] Relay activated. Door OPEN (\${dir}).\`);
+        } catch (err) {
+            console.error(\`[ACCESS DENIED] \${err.message}\`);
         }
-    }
-
-    verifyCredentials(cardId) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (cardId.includes("REVOKED")) reject(new Error("Invalid Card"));
-                else resolve(true);
-            }, 200);
-        });
-    }
-
-    checkAntiPassback(cardId, dir) {
-        if (this.strictMode) {
-            const isInside = this.occupants.has(cardId);
-            if (dir === 'IN' && isInside) throw new Error("APB Error: Already Inside");
-            if (dir === 'OUT' && !isInside) throw new Error("APB Error: Not Inside");
-        }
-        
-        dir === 'IN' ? this.occupants.add(cardId) : this.occupants.delete(cardId);
-    }
-
-    executeRelay(dir) {
-        console.log(\`[DOOR \${this.doorId}] Relay activated. Door is OPEN (\${dir}).\`);
     }
 }
 
 const labEntrance = new DoorController("LAB_01");
-labEntrance.processTagEvent("USER_99", "IN");
+labEntrance.processTag("USER_99", "IN");
+labEntrance.processTag("REVOKED_01", "IN");
+`,
+    6: `// 6번: C# - 생체인식 및 RFID 통합 출입 제어 시스템
+using System;
+using System.Collections.Generic;
+
+public class BioAuthController {
+    private HashSet<string> activeUsers = new HashSet<string>();
+    private bool isLockdown = false;
+
+    public void ToggleLockdown() {
+        isLockdown = !isLockdown;
+        Console.WriteLine($"[EMERGENCY] Lockdown status: {isLockdown}");
+    }
+
+    public void ProcessEntry(string rfid, bool bioVerified) {
+        if (isLockdown) {
+            Console.WriteLine($"[DENIED] {rfid} rejected. System in lockdown.");
+            return;
+        }
+        if (!bioVerified) {
+            Console.WriteLine($"[DENIED] {rfid} biometric verification failed.");
+            return;
+        }
+        if (!activeUsers.Add(rfid)) {
+            Console.WriteLine($"[ALERT] APB: {rfid} is already inside.");
+            return;
+        }
+        Console.WriteLine($"[GRANTED] {rfid} entry successful. Door unlocked.");
+    }
+}
+
+public class Program {
+    public static void Main() {
+        var gate = new BioAuthController();
+        gate.ProcessEntry("EMP-001", true);
+        gate.ProcessEntry("EMP-001", true); // APB Trigger
+    }
+}
 `
 };
 
@@ -367,5 +349,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[서버 가동 성공] 5개국어 및 출입 보안 시스템 코드 업데이트 완료! 포트: ${PORT}`);
+    console.log(`[서버 가동 성공] 6개국어 및 관리자 전용 방 생성 시스템 적용 완료! 포트: ${PORT}`);
 });
