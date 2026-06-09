@@ -12,8 +12,8 @@
         .hidden { display: none !important; }
         .card { background: #2b2b32; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         h3 { margin-top: 0; color: #ff8700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
-        input[type="text"], select { padding: 12px 16px; background: #18181c; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 15px; width: 100%; max-width: 300px; margin-right: 10px; }
-        button { padding: 12px 24px; background: #007acc; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        input[type="text"], input[type="password"], select { padding: 12px 16px; background: #18181c; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 15px; width: 100%; max-width: 300px; margin-right: 10px; }
+        button { padding: 12px 24px; background: #007acc; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
         button:hover { background: #0062a3; }
         .share-link { background: #121214; padding: 15px; border-radius: 6px; color: #4ec9b0; font-family: monospace; font-size: 14px; border: 1px dashed #4ec9b0; margin-top: 15px; word-break: break-all; }
         .player-status { margin: 18px 0; background: #18181c; padding: 12px; border-radius: 6px; border-left: 4px solid #444; }
@@ -42,10 +42,11 @@
     <h1>🚀 2026 R&D센터 스피드 타자왕</h1>
 
     <div id="view-login" class="card">
-        <h3>게임 참가자 정보 등록</h3>
+        <h3>👤 게임 참가자 정보 등록</h3>
         <p style="color: #a8a8b2; font-size: 14px;">이름을 입력하고 입장해주세요.</p>
         <div style="display: flex; gap: 10px; align-items: center; margin-top: 15px;">
-            <input type="text" id="input-name" placeholder="이름 입력" maxlength="12">
+            <input type="text" id="input-name" placeholder="이름 입력 (최대 12자)" maxlength="12">
+            <input type="password" id="input-password" class="hidden" placeholder="방 개설 비밀번호" style="max-width: 150px;">
             <button id="btn-join">입장하기</button>
         </div>
     </div>
@@ -59,11 +60,12 @@
             <h4 style="margin: 0 0 15px 0; color: #ff8700;">🛠️ 방장 제어 옵션</h4>
             <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                 <select id="select-lang">
-                    <option value="1">1번 : C 언어 </option>
-                    <option value="2">2번 : C++ </option>
-                    <option value="3">3번 : Java </option>
-                    <option value="4">4번 : Python </option>
-                    <option value="5">5번 : JavaScript </option>
+                    <option value="1">1번 : C 언어 (안티패스백 출입 통제)</option>
+                    <option value="2">2번 : C++ (이중 인증 도어락 제어)</option>
+                    <option value="3">3번 : Java (다중 구역 보안 매니저)</option>
+                    <option value="4">4번 : Python (출입 로깅 파이프라인)</option>
+                    <option value="5">5번 : JavaScript (비동기 통제 게이트웨이)</option>
+                    <option value="6">6번 : C# (생체 및 RFID 제어)</option>
                 </select>
                 <button id="btn-start" style="background: #4ec9b0; color: #18181c;">🔥 15분 배틀 시작!</button>
             </div>
@@ -76,7 +78,7 @@
         </div>
 
         <h3>
-            <span id="game-title" style="color: #4ec9b0;"> 코드를 똑같이 입력하세요!</span>
+            <span id="game-title" style="color: #4ec9b0;">🎮 코드를 똑같이 입력하세요!</span>
             <div id="timer-display" class="timer">15:00</div>
         </h3>
         <div class="text-display" id="target-text"></div>
@@ -114,6 +116,9 @@
 <script>
     const playerId = Math.random().toString(36).substring(2, 10);
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // URL에 'room' 코드가 없으면 방 생성(호스트)으로 간주
+    const isCreatingRoom = !urlParams.has('room');
     let roomId = urlParams.get('room');
     if (!roomId) roomId = Math.random().toString(36).substring(2, 8);
 
@@ -128,6 +133,11 @@
     let originalText = "";
     let startTime = null;
     let pollInterval = null;
+
+    // 방장 모드일 때만 비밀번호 입력창 노출
+    if (isCreatingRoom) {
+        document.getElementById('input-password').classList.remove('hidden');
+    }
 
     async function sendAction(url, data = {}) {
         await fetch(url, {
@@ -149,6 +159,14 @@
         const name = document.getElementById('input-name').value.trim();
         if (!name) return alert('참가자 이름을 입력해주세요!');
         
+        // 방 생성 권한(비밀번호 4321) 검사
+        if (isCreatingRoom) {
+            const pwd = document.getElementById('input-password').value;
+            if (pwd !== '4321') {
+                return alert('방 개설 권한이 없습니다. 비밀번호를 확인하세요.');
+            }
+        }
+        
         await sendAction('/api/join', { name });
         
         ui.login.classList.add('hidden');
@@ -167,7 +185,6 @@
         await sendAction('/api/control', { action: 'start' });
     });
 
-    // 방장 전용 강제 종료 이벤트
     document.getElementById('btn-force-stop').addEventListener('click', async () => {
         if(confirm("정말 게임을 강제 종료하고 현재 상태로 순위를 집계하시겠습니까?")) {
             await sendAction('/api/control', { action: 'force_stop' });
@@ -289,7 +306,6 @@
         const progress = (correctChars / originalText.length) * 100;
         const timeElapsed = (new Date() - startTime) / 1000 / 60;
         
-        // 5글자=1단어 계산(WPM)을 빼고, 실제 입력한 타수(문자 수)를 시간(분)으로 나눠 '분당 타수(CPM)'로 변경
         const cpm = timeElapsed > 0 ? Math.floor(correctChars / timeElapsed) : 0;
 
         await sendAction('/api/progress', { progress, wpm: cpm });
