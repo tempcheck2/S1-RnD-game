@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 8080;
 const TIME_LIMIT_MS = 15 * 60 * 1000; // 15분
 
 const CODE_TEXTS = {
-    1: `// 1번: C 언어 - 출입 통제 안티패스백(APB) 시스템
+    1: `// 1번 C언어
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -35,11 +35,11 @@ void process_card_tag(int user_id, bool is_entry) {
 int main() {
     printf("[SYSTEM] APB Manager Initialized.\\n");
     process_card_tag(10, true);
-    process_card_tag(10, true);  // APB Error Trigger
+    process_card_tag(10, true);
     process_card_tag(10, false);
     return 0;
 }`,
-    2: `// 2번: C++ - 이중 인증(2-Card Authentication) 도어락 제어기
+    2: `// 2번 C++
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -74,7 +74,7 @@ int main() {
     lab_door.tag_card("MGR_9901");
     return 0;
 }`,
-    3: `// 3번: Java - 다중 구역 안티패스백 및 보안 인가 매니저
+    3: `// 3번 Java
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,10 +104,10 @@ public class AccessController {
     public static void main(String[] args) {
         AccessController ac = new AccessController(true);
         ac.requestAccess("SEC_1004", "SERVER_ROOM");
-        ac.requestAccess("SEC_1004", "SERVER_ROOM"); // Trigger APB
+        ac.requestAccess("SEC_1004", "SERVER_ROOM");
     }
 }`,
-    4: `# 4번: Python - 데코레이터를 활용한 2FA 출입 로깅 파이프라인
+    4: `# 4번 Python
 import time
 from datetime import datetime
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     lab_door.swipe_card("EMP_882", "L-01")
     lab_door.swipe_card("MGR_001", "L-01")
 `,
-    5: `// 5번: JavaScript - 비동기 인증 및 안티패스백 게이트웨이
+    5: `// 5번 JavaScript
 class DoorController {
     constructor(doorId, strictMode = true) {
         this.doorId = doorId;
@@ -173,7 +173,7 @@ const labEntrance = new DoorController("LAB_01");
 labEntrance.processTag("USER_99", "IN");
 labEntrance.processTag("REVOKED_01", "IN");
 `,
-    6: `// 6번: C# - 생체인식 및 RFID 통합 출입 제어 시스템
+    6: `// 6번 C#
 using System;
 using System.Collections.Generic;
 
@@ -207,7 +207,7 @@ public class Program {
     public static void Main() {
         var gate = new BioAuthController();
         gate.ProcessEntry("EMP-001", true);
-        gate.ProcessEntry("EMP-001", true); // APB Trigger
+        gate.ProcessEntry("EMP-001", true);
     }
 }
 `
