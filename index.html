@@ -159,10 +159,10 @@
         const name = document.getElementById('input-name').value.trim();
         if (!name) return alert('참가자 이름을 입력해주세요!');
         
-        // 방 생성 권한(비밀번호 4321) 검사
+        // 방 생성 권한(비밀번호) 검사
         if (isCreatingRoom) {
             const pwd = document.getElementById('input-password').value;
-            if (pwd !== '4321') {
+            if (pwd !== '4444') {
                 return alert('방 개설 권한이 없습니다. 비밀번호를 확인하세요.');
             }
         }
